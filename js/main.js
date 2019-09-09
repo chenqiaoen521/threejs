@@ -16,7 +16,7 @@ function init() {
    // add the objects
   //createPlane();
   createSea();
-  //createSky();
+  createSky();
   // start a loop that will update the objects' positions 
   // and render the scene on each frame
   loop();
@@ -89,49 +89,80 @@ function createLights() {
 }
 
 Sea = function(){
-     
-    // create the geometry (shape) of the cylinder;
-    // the parameters are: 
-    // radius top, radius bottom, height, number of segments on the radius, number of segments vertically
-    var geom = new THREE.CylinderGeometry(600,600,800,40,10);
-     
-    // rotate the geometry on the x axis
-    geom.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
-     
-    // create the material 
-    var mat = new THREE.MeshPhongMaterial({
-        color:Colors.blue,
-        transparent:true,
-        opacity:.6,
-        shading:THREE.FlatShading,
-    });
- 
-    // To create an object in Three.js, we have to create a mesh 
-    // which is a combination of a geometry and some material
-    this.mesh = new THREE.Mesh(geom, mat);
- 
-    // Allow the sea to receive shadows
-    this.mesh.receiveShadow = true; 
+  var geom = new THREE.CylinderGeometry(600,600,800,40,10);
+  geom.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
+  var mat = new THREE.MeshPhongMaterial({
+    color:Colors.blue,
+    transparent:true,
+    opacity:.6,
+    shading:THREE.FlatShading,
+  });
+  this.mesh = new THREE.Mesh(geom, mat);
+  this.mesh.receiveShadow = true; 
 }
- 
-// Instantiate the sea and add it to the scene:
  
 var sea;
  
 function createSea(){
-    sea = new Sea();
- 
-    // push it a little bit at the bottom of the scene
-    sea.mesh.position.y = -600;
- 
-    // add the mesh of the sea to the scene
-    scene.add(sea.mesh);
-    
-    
+  sea = new Sea();
+  sea.mesh.position.y = -600;
+  scene.add(sea.mesh);
+}
+
+Cloud = function() {
+  this.mesh = new THREE.Object3D();
+  var geom = new THREE.BoxGeometry(20, 20, 20);
+  var mat = new THREE.MeshPhongMaterial({
+    colors: Colors.white
+  });
+  var nBlocs = 3 + Math.floor(Math.random() * 3);
+  for(var i = 0; i < nBlocs; i++){
+    var m = new THREE.Mesh(geom, mat);
+    m.position.x = i * 15;
+    m.position.y = Math.random() * 10;
+    m.position.z = Math.random() * 10;
+    m.rotation.z = Math.random() * Math.PI * 2;
+    m.rotation.y = Math.random() * Math.PI * 2;
+
+    var s = .1 + Math.random() * .9;
+    m.scale.set(s, s, s);
+    m.castShadow = true;
+    m.receiveShadow = true;
+    this.mesh.add(m);
+  }
+}
+
+var cloud;
+
+Sky = function () {
+  this.mesh = new THREE.Object3D();
+  this.nClouds = 20;
+  var stepAngle = Math.PI * 2 / this.nClouds;
+  for (var i = 0; i < this.nClouds; i++) {
+    var c = new Cloud();
+    var a = stepAngle * i;
+    var h = 750 + Math.random() * 200;
+    c.mesh.position.y = Math.sin(a) * h;
+    c.mesh.position.x = Math.cos(a) * h;
+    c.mesh.rotation.z = a + Math.PI/2;
+    c.mesh.position.z = -400-Math.random()*400;
+    var s = 1+Math.random()*2;
+    c.mesh.scale.set(s,s,s);
+    this.mesh.add(c.mesh);  
+  }
+}
+
+var sky;
+
+function createSky() {
+  sky = new Sky();
+  sky.mesh.position.y = -600;
+  scene.add(sky.mesh);
 }
 
 function loop () {
   renderer.render(scene, camera);
   sea.mesh.rotation.z += .005;
+  sky.mesh.rotation.z += .01;
   requestAnimationFrame(loop);
 }
